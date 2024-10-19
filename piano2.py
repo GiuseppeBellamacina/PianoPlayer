@@ -20,12 +20,18 @@ class Note():
     
     async def play(self):
         print(self.name)
+        playing_channels = []
         for i, sound in enumerate(self.sounds):
             if sound:
-                pygame.mixer.Channel(i).play(sound)
+                channel = pygame.mixer.find_channel()
+                if channel:
+                    channel.play(sound)
+                    playing_channels.append(channel)
+        
         await asyncio.sleep(self.duration)
-        for i, sound in enumerate(self.sounds):
-            pygame.mixer.Channel(i).stop()
+        
+        for channel in playing_channels:
+            channel.stop()
 
 def read_score(file_path: str) -> list[Note]:
     pygame.mixer.init(channels=16)
@@ -40,12 +46,12 @@ def read_score(file_path: str) -> list[Note]:
         score.append(note)
     return score
 
-def play_notes(score: list[Note]):
+async def play_notes(score: list[Note]):
     for notes in score:
-        asyncio.run(notes.play())
+        await notes.play()
 
 if __name__ == '__main__':
     system('clear') if name == 'posix' else system('cls')
     score = read_score('output.txt')
-    play_notes(score)
+    asyncio.run(play_notes(score))
     pygame.mixer.quit()
